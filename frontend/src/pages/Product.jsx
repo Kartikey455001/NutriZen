@@ -15,7 +15,7 @@ const Product = () => {
     const fetchProductDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/api/products/${barcode}`);
+        const response = await axios.get(`https://nutrizen-2ozq.onrender.com/api/products/${barcode}`);
         setData(response.data);
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to analyze product. It might not exist in the public database yet.');

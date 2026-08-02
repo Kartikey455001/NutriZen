@@ -29,7 +29,7 @@ const ChatAssistant = () => {
     setLoading(true);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/chat', {
+      const response = await axios.post('https://nutrizen-2ozq.onrender.com/api/chat', {
         message: userMsg.text,
         history: messages
       });

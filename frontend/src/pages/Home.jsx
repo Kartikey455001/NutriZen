@@ -27,7 +27,7 @@ const Home = () => {
   useEffect(() => {
     const fetchTrending = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/products/trending');
+        const response = await axios.get('https://nutrizen-2ozq.onrender.com/api/products/trending');
         setTrending(response.data);
       } catch (error) {
         console.error('Failed to fetch trending products');
@@ -47,7 +47,7 @@ const Home = () => {
       }
       setIsSearching(true);
       try {
-        const response = await axios.get(`http://localhost:5000/api/products/search?q=${searchTerm}`);
+        const response = await axios.get(`https://nutrizen-2ozq.onrender.com/api/products/search?q=${searchTerm}`);
         setSuggestions(response.data);
       } catch (error) {
         console.error('Search failed');
