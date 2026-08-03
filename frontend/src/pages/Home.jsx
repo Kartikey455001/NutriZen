@@ -1,25 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const Home = () => {
   const [trending, setTrending] = useState([]);
   const [loadingTrending, setLoadingTrending] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const searchQuery = queryParams.get('search');
 
   useEffect(() => {
-    const fetchTrending = async () => {
+    const fetchProducts = async () => {
+      setLoadingTrending(true);
       try {
-        const response = await axios.get('https://nutrizen-2ozq.onrender.com/api/products/trending');
-        setTrending(response.data);
+        if (searchQuery) {
+          const response = await axios.get(`https://nutrizen-2ozq.onrender.com/api/products/search?q=${encodeURIComponent(searchQuery)}`);
+          setTrending(response.data);
+        } else {
+          const response = await axios.get('https://nutrizen-2ozq.onrender.com/api/products/trending');
+          setTrending(response.data);
+        }
       } catch (error) {
-        console.error('Failed to fetch trending products');
+        console.error('Failed to fetch products');
       } finally {
         setLoadingTrending(false);
       }
     };
-    fetchTrending();
-  }, []);
+    fetchProducts();
+  }, [searchQuery]);
 
   const smoothScrollTo = (id) => {
     const el = document.getElementById(id);
@@ -102,15 +111,21 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Grid: Trending Products */}
+      {/* Grid: Trending Products / Search Results */}
       <section id="trending-grid-section" className="space-y-6 pb-20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="font-display font-bold text-2xl text-slate-800 dark:text-slate-100 tracking-tight">Trending Verified Products</h2>
-            <p className="text-slate-400 dark:text-slate-500 text-xs sm:text-sm">Click any premium card below to execute instantaneous high-level biochemical breakdown views</p>
+            <h2 className="font-display font-bold text-2xl text-slate-800 dark:text-slate-100 tracking-tight">
+              {searchQuery ? `Search Results for "${searchQuery}"` : "Trending Verified Products"}
+            </h2>
+            <p className="text-slate-400 dark:text-slate-500 text-xs sm:text-sm">
+              {searchQuery 
+                ? "Select a product below to view its biochemical breakdown" 
+                : "Click any premium card below to execute instantaneous high-level biochemical breakdown views"}
+            </p>
           </div>
-          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full font-mono self-start sm:self-auto">
-            {trending.length > 0 ? `${trending.length} ACTIVE CORES` : 'LOADING...'}
+          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full font-mono self-start sm:self-auto whitespace-nowrap">
+            {loadingTrending ? 'LOADING...' : trending.length > 0 ? `${trending.length} RESULTS` : '0 RESULTS'}
           </span>
         </div>
 
