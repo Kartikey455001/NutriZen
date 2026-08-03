@@ -8,14 +8,18 @@ const Scanner = () => {
   const webcamRef = useRef(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [isScanning, setIsScanning] = useState(true);
+  const [lastScan, setLastScan] = useState(null);
   const [manualCode, setManualCode] = useState('');
   const codeReader = useRef(new BrowserMultiFormatReader());
 
   const handleScan = useCallback((result) => {
     if (result && result.text && isScanning) {
       const scannedText = result.text.trim();
-      // Product barcodes (UPC/EAN) are numeric and typically 8-14 digits long
-      if (/^\d{7,14}$/.test(scannedText)) {
+      setLastScan(scannedText); // Show the user what it saw
+      console.log("ZXing Scanned:", scannedText);
+      
+      // Accept any barcode string longer than 4 characters (prevents 1-letter garbage scans)
+      if (scannedText.length > 4) {
         setIsScanning(false);
         if (navigator.vibrate) navigator.vibrate(100);
         navigate(`/product/${scannedText}`);
