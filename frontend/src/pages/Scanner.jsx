@@ -1,24 +1,27 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import Webcam from 'react-webcam';
 import { BrowserMultiFormatReader, NotFoundException } from '@zxing/library';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 
 const Scanner = () => {
   const navigate = useNavigate();
-  const webcamRef = useRef(null);
+  const videoRef = useRef(null);
   const [hasPermission, setHasPermission] = useState(null);
   const [isScanning, setIsScanning] = useState(true);
   const [lastScan, setLastScan] = useState(null);
   const [manualCode, setManualCode] = useState('');
+  
+  // Persist a single reader instance across renders
   const codeReader = useRef(new BrowserMultiFormatReader());
 
+  // Handle successful scan
   const handleScan = useCallback((result) => {
     if (result && result.text && isScanning) {
       const scannedText = result.text.trim();
       setLastScan(scannedText); // Show the user what it saw
       console.log("ZXing Scanned:", scannedText);
       
-      // Accept any barcode string longer than 4 characters (prevents 1-letter garbage scans)
+      // Accept any barcode string longer than 4 characters
       if (scannedText.length > 4) {
         setIsScanning(false);
         if (navigator.vibrate) navigator.vibrate(100);
@@ -27,36 +30,65 @@ const Scanner = () => {
     }
   }, [isScanning, navigate]);
 
+  // Native ZXing camera initialization
   useEffect(() => {
-    let animationFrameId;
-    const scan = () => {
-      if (webcamRef.current && webcamRef.current.video && webcamRef.current.video.readyState === 4) {
-        try {
-          const videoEl = webcamRef.current.video;
-          const result = codeReader.current.decodeFromVideoElement(videoEl);
-          handleScan(result);
-        } catch (err) {
-          if (!(err instanceof NotFoundException)) {
-            console.error("Barcode scanning error:", err);
-          }
+    let mounted = true;
+
+    const startScanner = async () => {
+      try {
+        const videoInputDevices = await codeReader.current.listVideoInputDevices();
+        if (!mounted) return;
+        
+        let selectedDeviceId;
+        
+        // Prefer back camera ("environment")
+        const backCamera = videoInputDevices.find(device => 
+          device.label.toLowerCase().includes('back') || 
+          device.label.toLowerCase().includes('environment')
+        );
+        
+        if (backCamera) {
+          selectedDeviceId = backCamera.deviceId;
+        } else if (videoInputDevices.length > 0) {
+          // Fallback to the last device (often the back camera on mobile)
+          selectedDeviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
         }
-      }
-      if (isScanning) {
-        animationFrameId = requestAnimationFrame(scan);
+
+        // Let ZXing handle the continuous decode loop natively
+        codeReader.current.decodeFromVideoDevice(
+          selectedDeviceId,
+          videoRef.current,
+          (result, err) => {
+            if (mounted && isScanning && result) {
+              handleScan(result);
+            }
+          }
+        );
+        
+        setHasPermission(true);
+      } catch (err) {
+        console.error("Camera startup error:", err);
+        setHasPermission(false);
       }
     };
 
     if (isScanning) {
-      animationFrameId = requestAnimationFrame(scan);
+      startScanner();
     }
+
     return () => {
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      mounted = false;
+      // Properly shuts down camera tracks and terminates decoder
+      if (codeReader.current) {
+        codeReader.current.reset();
+      }
     };
-  }, [handleScan, isScanning]);
+  }, [isScanning, handleScan]);
 
   const handleManualSubmit = (e) => {
     e.preventDefault();
-    if (manualCode.trim()) {
+    if (manualCode.trim().length > 4) {
+      setIsScanning(false);
       navigate(`/product/${manualCode.trim()}`);
     }
   };
@@ -70,17 +102,10 @@ const Scanner = () => {
       </div>
 
       {/* Simulator Camera Viewport Screen */}
-      <div className="relative w-full max-w-sm mx-auto bg-slate-950 rounded-[32px] overflow-hidden border-4 border-white dark:border-slate-800 shadow-2xl flex flex-col items-center justify-center select-none group min-h-[300px]">
+      <div className="relative w-full max-w-sm mx-auto rounded-[32px] overflow-hidden border-4 border-white dark:border-slate-800 shadow-2xl h-[360px] bg-slate-950">
         
-        {/* Animated Mock Camera Background (Hide when camera is active) */}
-        {hasPermission !== true && (
-          <div className="absolute inset-0 opacity-45 pointer-events-none z-0">
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-emerald-950 to-slate-900 animate-[pulseSoft_2.5s_infinite_ease-in-out]"></div>
-          </div>
-        )}
-
         {hasPermission === false ? (
-          <div className="text-center p-6 text-red-400 z-10 relative">
+          <div className="flex flex-col items-center justify-center h-full text-red-400 p-6 relative z-10 bg-slate-950">
             <svg className="w-12 h-12 mx-auto mb-4 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -89,20 +114,16 @@ const Scanner = () => {
             <p className="text-sm">Please enable camera permissions.</p>
           </div>
         ) : (
-          <div className="relative w-full h-full flex items-center justify-center z-10">
-            <Webcam
-              ref={webcamRef}
-              audio={false}
-              playsInline={true}
-              screenshotFormat="image/jpeg"
-              videoConstraints={{ facingMode: "environment" }}
-              onUserMedia={() => setHasPermission(true)}
-              onUserMediaError={() => setHasPermission(false)}
-              className="w-full h-full object-cover min-h-[300px]"
+          <>
+            <video 
+              ref={videoRef}
+              className="absolute inset-0 w-full h-full object-cover z-0"
+              muted
+              playsInline
             />
             
             {/* Scanning Guide Target Frame Overlay */}
-            <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
+            <div className="absolute inset-0 z-10 pointer-events-none flex items-center justify-center">
               <div className="relative w-64 sm:w-72 h-40 sm:h-44 border border-white/20 rounded-2xl flex flex-col justify-between p-4 bg-black/10 backdrop-blur-[2px] shadow-inner overflow-hidden">
                 {/* Moving Laser Scan Line */}
                 <div className="scanner-line absolute left-0 right-0 h-1 bg-emerald-400 w-full animate-[laser_2.2s_infinite_ease-in-out]"></div>
@@ -114,7 +135,7 @@ const Scanner = () => {
                 <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-emerald-400 rounded-br-xl"></div>
               </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 
