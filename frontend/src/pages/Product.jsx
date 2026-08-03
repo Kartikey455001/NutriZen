@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
-import { ArrowLeft, AlertTriangle, CheckCircle, Info, ShieldAlert, Droplet, Candy } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, CheckCircle, Droplet, Candy, ArrowLeft } from 'lucide-react';
 
 const Product = () => {
   const { barcode } = useParams();
@@ -29,28 +28,28 @@ const Product = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
-          className="w-12 h-12 border-[3px] border-emerald-500 border-t-transparent rounded-full mb-6 shadow-sm"
-        />
-        <h2 className="text-xl font-bold text-slate-800 tracking-tight">AI is analyzing product...</h2>
-        <p className="text-slate-500 mt-2 font-medium">Evaluating ingredients & health metrics.</p>
+      <div className="screen-view active flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+        <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="text-center space-y-2">
+          <h2 className="font-display font-bold text-2xl text-slate-800 dark:text-slate-100 tracking-tight">Extracting Metrics</h2>
+          <p className="text-slate-400 dark:text-slate-500 text-sm">Evaluating biochemical compounds via AI core...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+      <div className="screen-view active flex flex-col items-center justify-center min-h-[60vh] space-y-6">
+        <div className="w-20 h-20 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center">
           <AlertTriangle size={32} className="text-red-500" />
         </div>
-        <h2 className="text-xl font-bold text-slate-800 tracking-tight max-w-sm">{error}</h2>
+        <div className="text-center space-y-2">
+          <h2 className="font-display font-bold text-xl text-slate-800 dark:text-slate-100 tracking-tight max-w-sm">{error}</h2>
+        </div>
         <button 
           onClick={() => navigate('/scan')}
-          className="mt-8 px-8 py-3 bg-slate-900 text-white rounded-full font-medium shadow-[0_8px_20px_rgb(0,0,0,0.12)] hover:scale-105 transition-transform"
+          className="px-8 py-3 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white rounded-xl font-bold transition-colors"
         >
           Try Another Scan
         </button>
@@ -63,130 +62,156 @@ const Product = () => {
   const isWarning = analysis.healthScore >= 5 && analysis.healthScore < 8;
 
   const scoreColor = isHealthy ? 'text-emerald-500' : isWarning ? 'text-amber-500' : 'text-red-500';
-  const scoreBgColor = isHealthy ? 'bg-emerald-50' : isWarning ? 'bg-amber-50' : 'bg-red-50';
-  const scoreBorderColor = isHealthy ? 'border-emerald-100' : isWarning ? 'border-amber-100' : 'border-red-100';
+  const scoreStroke = isHealthy ? 'stroke-emerald-500' : isWarning ? 'stroke-amber-500' : 'stroke-red-500';
+
+  const circumference = 2 * Math.PI * 45;
+  const strokeDashoffset = circumference - ((analysis.healthScore / 10) * circumference);
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-24 font-sans">
-      <header className="p-6 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-xl border-b border-slate-100 z-40">
-        <button onClick={() => navigate('/')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-          <ArrowLeft size={24} className="text-slate-700" />
-        </button>
-        <h1 className="text-lg font-bold text-slate-800 tracking-tight">Analysis Result</h1>
-        <div className="w-10"></div>
-      </header>
+    <div className="screen-view active space-y-8 max-w-5xl mx-auto">
+      
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-emerald-600 transition-colors">
+        <ArrowLeft size={16} /> BACK TO PREVIOUS
+      </button>
 
-      <main className="px-6 space-y-6 max-w-lg mx-auto pt-6">
-        {/* Product Overview */}
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="flex flex-col items-center text-center">
-          {basicInfo.imageFrontUrl ? (
-            <div className="w-32 h-32 rounded-[2rem] bg-white p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 mb-4 overflow-hidden flex items-center justify-center">
-              <img src={basicInfo.imageFrontUrl} alt="Product" className="max-w-full max-h-full object-contain mix-blend-multiply" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* Left Side: Product Profile */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="glass-card p-6 flex flex-col items-center text-center relative">
+            <div className="w-full aspect-square bg-slate-100 dark:bg-slate-800 rounded-[2rem] overflow-hidden mb-6 flex items-center justify-center p-6 border border-slate-200/50 dark:border-slate-700/50">
+              {basicInfo.imageFrontUrl ? (
+                <img src={basicInfo.imageFrontUrl} alt="Product" className="max-w-full max-h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+              ) : (
+                <div className="text-6xl">📦</div>
+              )}
             </div>
-          ) : (
-             <div className="w-32 h-32 rounded-[2rem] bg-slate-50 mb-4 border border-slate-100 flex items-center justify-center text-4xl">🏷️</div>
-          )}
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight leading-tight">{basicInfo.productName || 'Unknown Product'}</h2>
-          <p className="text-slate-500 font-medium mt-1">{basicInfo.brand || 'Unknown Brand'}</p>
-        </motion.div>
-
-        {/* Circular Health Score */}
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className={`rounded-3xl p-8 flex flex-col items-center justify-center text-center border ${scoreBgColor} ${scoreBorderColor} shadow-sm`}>
-          <div className="relative w-36 h-36 flex items-center justify-center mb-5">
-            <svg className="w-full h-full transform -rotate-90 drop-shadow-sm">
-              <circle cx="72" cy="72" r="66" className="stroke-white" strokeWidth="12" fill="none" />
-              <motion.circle 
-                initial={{ strokeDasharray: "0 1000" }}
-                animate={{ strokeDasharray: `${(analysis.healthScore / 10) * 414} 1000` }}
-                transition={{ duration: 1.5, ease: "easeOut" }}
-                cx="72" cy="72" r="66" 
-                className={`stroke-current ${scoreColor}`} 
-                strokeWidth="12" fill="none" strokeLinecap="round" 
-              />
-            </svg>
-            <div className="absolute flex flex-col items-center justify-center">
-              <span className={`text-4xl font-extrabold tracking-tighter ${scoreColor}`}>{analysis.healthScore}</span>
-              <span className="text-xs font-bold text-slate-400">/ 10</span>
-            </div>
+            <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-2">{basicInfo.category || 'Unknown Category'}</span>
+            <h2 className="font-display font-bold text-3xl text-slate-800 dark:text-slate-100 tracking-tight leading-tight mb-2">{basicInfo.productName || 'Unknown Product'}</h2>
+            <p className="text-slate-400 dark:text-slate-500 font-medium text-sm">{basicInfo.brand || 'Unknown Brand'}</p>
           </div>
-          <h3 className={`text-xl font-bold tracking-tight mb-2 ${scoreColor}`}>{analysis.healthStatus}</h3>
-          <p className="text-sm font-medium text-slate-600 max-w-sm leading-relaxed">{analysis.summary}</p>
-        </motion.div>
+        </div>
 
-        {/* Detailed Insights */}
-        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="glass-card p-6">
-          <h3 className="text-lg font-bold text-slate-800 tracking-tight mb-5 flex items-center gap-2">
-            <ShieldAlert className="text-slate-700" size={20} /> Deep Analysis
-          </h3>
+        {/* Right Side: Analytical Breakdown */}
+        <div className="lg:col-span-7 space-y-6">
           
-          <div className="space-y-6">
-            {analysis.harmfulIngredients?.length > 0 && (
-              <div>
-                <h4 className="font-bold text-red-500 mb-3 flex items-center gap-1.5 text-sm uppercase tracking-wide"><AlertTriangle size={16}/> Harmful Ingredients</h4>
-                <div className="space-y-2">
-                  {analysis.harmfulIngredients.map((ing, i) => (
-                    <div key={i} className="bg-red-50/50 p-3 rounded-xl border border-red-100/50">
-                      <strong className="text-slate-800 text-sm block mb-0.5">{ing.name}</strong>
-                      <span className="text-sm text-slate-600 font-medium leading-relaxed">{ing.reason}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <h4 className="font-bold text-slate-700 mb-3 text-sm uppercase tracking-wide">Preservatives & Additives</h4>
-              <div className="flex flex-wrap gap-2">
-                {analysis.preservatives?.length > 0 ? (
-                  analysis.preservatives.map((pres, i) => (
-                    <span key={i} className="px-3 py-1.5 bg-slate-100 rounded-xl text-sm font-medium text-slate-700">{pres}</span>
-                  ))
-                ) : (
-                  <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 px-3 py-2 rounded-xl font-medium text-sm">
-                    <CheckCircle size={16}/> No preservatives detected
-                  </div>
-                )}
-              </div>
+          {/* AI Verdict Box */}
+          <div className="glass-card p-6 border-l-4 border-l-emerald-500 flex flex-col sm:flex-row gap-6 items-center sm:items-start relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+              <ShieldAlert size={100} />
             </div>
             
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex flex-col items-center text-center">
-                <Candy className="text-indigo-400 mb-2" size={20} />
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Sugar Level</p>
-                <p className="font-bold text-slate-800">{analysis.sugarLevel}</p>
-                <p className="text-sm font-medium text-slate-500">{analysis.sugar}</p>
+            {/* Circular Gauge */}
+            <div className="relative w-32 h-32 shrink-0">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle cx="64" cy="64" r="45" className="stroke-slate-200 dark:stroke-slate-700" strokeWidth="8" fill="none" />
+                <circle 
+                  cx="64" cy="64" r="45" 
+                  className={`progress-circle ${scoreStroke}`} 
+                  strokeWidth="8" fill="none" strokeLinecap="round" 
+                  strokeDasharray={circumference}
+                  style={{ strokeDashoffset }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-3xl font-display font-extrabold tracking-tighter ${scoreColor}`}>{analysis.healthScore}</span>
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Score</span>
               </div>
-              <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex flex-col items-center text-center">
-                <Droplet className="text-amber-400 mb-2" size={20} />
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-1">Oil Quality</p>
-                <p className="font-bold text-slate-800">{analysis.oilQuality}</p>
-                <p className="text-sm font-medium text-slate-500 truncate w-full px-2" title={analysis.oilType}>{analysis.oilType || 'None'}</p>
-              </div>
+            </div>
+
+            <div className="flex-1 text-center sm:text-left z-10">
+              <h3 className={`font-display text-xl font-bold tracking-tight mb-2 ${scoreColor}`}>
+                {analysis.healthStatus}
+              </h3>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
+                {analysis.summary}
+              </p>
             </div>
           </div>
-        </motion.div>
 
-        {/* Healthy Alternatives */}
-        {analysis.healthyAlternatives?.length > 0 && (
-          <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="mb-8 pt-4">
-            <h3 className="text-lg font-bold text-slate-800 tracking-tight mb-4 px-2">Healthier Alternatives</h3>
-            <div className="space-y-3">
-              {analysis.healthyAlternatives.map((alt, i) => (
-                <div key={i} className="glass-card p-4 flex justify-between items-center bg-white border border-emerald-100/50 hover:border-emerald-200 transition-colors cursor-default">
-                  <div className="pr-4">
-                    <h4 className="font-bold text-slate-800">{alt.name}</h4>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">{alt.brand}</p>
-                    <p className="text-sm font-medium text-emerald-600 mt-2 leading-snug">{alt.reason}</p>
-                  </div>
-                  <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 font-bold shrink-0 shadow-sm border border-emerald-100">
-                    {alt.healthScore}
+          {/* Deep Analysis Grid */}
+          <div className="glass-card p-6">
+            <h3 className="font-display text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight mb-6 flex items-center gap-2">
+              <ShieldAlert className="text-emerald-500" size={20} /> Biochemical Deep Dive
+            </h3>
+            
+            <div className="space-y-6">
+              
+              {analysis.harmfulIngredients?.length > 0 && (
+                <div>
+                  <h4 className="font-bold text-red-500 mb-3 flex items-center gap-1.5 text-xs uppercase tracking-wider font-mono">
+                    <AlertTriangle size={14}/> Flagged Compounds
+                  </h4>
+                  <div className="space-y-2">
+                    {analysis.harmfulIngredients.map((ing, i) => (
+                      <div key={i} className="bg-red-50/80 dark:bg-red-900/20 p-3 rounded-xl border border-red-100 dark:border-red-900/50">
+                        <strong className="text-slate-800 dark:text-slate-200 text-sm block mb-1">{ing.name}</strong>
+                        <span className="text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">{ing.reason}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
+              )}
+
+              <div>
+                <h4 className="font-bold text-slate-500 dark:text-slate-400 mb-3 text-xs uppercase tracking-wider font-mono">Additives & Preservatives</h4>
+                <div className="flex flex-wrap gap-2">
+                  {analysis.preservatives?.length > 0 ? (
+                    analysis.preservatives.map((pres, i) => (
+                      <span key={i} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-300">{pres}</span>
+                    ))
+                  ) : (
+                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-2 rounded-xl font-medium text-sm">
+                      <CheckCircle size={16}/> No artificial preservatives detected
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 p-4 rounded-2xl flex flex-col items-center text-center">
+                  <Candy className="text-indigo-400 mb-2" size={20} />
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1 font-mono">Sugar Profile</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-1">{analysis.sugarLevel}</p>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{analysis.sugar}</p>
+                </div>
+                <div className="bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 p-4 rounded-2xl flex flex-col items-center text-center">
+                  <Droplet className="text-amber-400 mb-2" size={20} />
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1 font-mono">Lipid Quality</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 text-sm mb-1">{analysis.oilQuality}</p>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate w-full px-2" title={analysis.oilType}>{analysis.oilType || 'N/A'}</p>
+                </div>
+              </div>
+
             </div>
-          </motion.div>
-        )}
-      </main>
+          </div>
+
+          {/* Alternatives */}
+          {analysis.healthyAlternatives?.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="font-display text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs">A</span>
+                Superior Alternatives
+              </h3>
+              <div className="grid grid-cols-1 gap-3">
+                {analysis.healthyAlternatives.map((alt, i) => (
+                  <div key={i} className="glass-card p-4 flex justify-between items-center bg-white/40 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-default">
+                    <div className="pr-4">
+                      <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">{alt.name}</h4>
+                      <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-1">{alt.brand}</p>
+                      <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mt-2">{alt.reason}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold font-display shrink-0 shadow-sm border border-emerald-100 dark:border-emerald-800">
+                      {alt.healthScore}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
     </div>
   );
 };

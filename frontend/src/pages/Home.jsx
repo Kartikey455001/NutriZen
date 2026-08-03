@@ -1,29 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Scan, Search, Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 import axios from 'axios';
 
-const CATEGORIES = [
-  { name: 'All', emoji: '🌟' },
-  { name: 'Snacks', emoji: '🥨' },
-  { name: 'Beverages', emoji: '🥤' },
-  { name: 'Dairy', emoji: '🧀' },
-  { name: 'Chocolates', emoji: '🍫' },
-  { name: 'Biscuits', emoji: '🍪' },
-];
-
 const Home = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [trending, setTrending] = useState([]);
   const [loadingTrending, setLoadingTrending] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('All');
-  const searchRef = useRef(null);
   const navigate = useNavigate();
 
-  // Fetch Trending Products
   useEffect(() => {
     const fetchTrending = async () => {
       try {
@@ -38,190 +21,136 @@ const Home = () => {
     fetchTrending();
   }, []);
 
-  // Handle Search Autocomplete
-  useEffect(() => {
-    const fetchSuggestions = async () => {
-      if (searchTerm.trim().length < 2) {
-        setSuggestions([]);
-        return;
-      }
-      setIsSearching(true);
-      try {
-        const response = await axios.get(`https://nutrizen-2ozq.onrender.com/api/products/search?q=${searchTerm}`);
-        setSuggestions(response.data);
-      } catch (error) {
-        console.error('Search failed');
-      } finally {
-        setIsSearching(false);
-      }
-    };
-
-    const debounceTimer = setTimeout(fetchSuggestions, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [searchTerm]);
-
-  // Click outside search to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setSuggestions([]);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSearchSubmit = (e) => {
-    if (e.key === 'Enter' && searchTerm.trim()) {
-      navigate(`/product/${searchTerm.trim()}`);
-    }
-  };
-
-  const getScoreColor = (score) => {
-    if (!score) return 'bg-slate-100 text-slate-500';
-    if (score >= 8) return 'bg-emerald-50 text-emerald-600 border-emerald-100';
-    if (score >= 5) return 'bg-amber-50 text-amber-600 border-amber-100';
-    return 'bg-red-50 text-red-600 border-red-100';
+  const smoothScrollTo = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] pb-24 font-sans">
-      {/* Soft Top Background Gradients */}
-      <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-emerald-50/50 to-transparent pointer-events-none -z-10"></div>
-      
-      <header className="pt-16 pb-8 px-6 max-w-lg mx-auto relative z-20">
-        <div className="flex justify-between items-center mb-10">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">
-              NutriZen
-            </h1>
-            <p className="text-slate-500 mt-1 font-medium text-sm">AI Nutrition Assistant</p>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-slate-100 border border-slate-200 shadow-sm overflow-hidden flex items-center justify-center">
-            <span className="text-xl">👋</span>
-          </div>
-        </div>
-
-        {/* Search Bar with Autocomplete */}
-        <div className="relative mb-10" ref={searchRef}>
-          <div className="relative glass-card p-3 flex items-center group z-30">
-            <Search className="text-slate-400 ml-2 group-focus-within:text-emerald-500 transition-colors shrink-0" size={20} />
-            <input 
-              type="text" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={handleSearchSubmit}
-              placeholder="Search products by name or barcode..." 
-              className="w-full bg-transparent border-none focus:outline-none px-3 text-slate-700 placeholder-slate-400 font-medium"
-            />
-            {isSearching && <Loader2 className="animate-spin text-emerald-500 mr-2 shrink-0" size={18} />}
-          </div>
-
-          {/* Autocomplete Dropdown Overlay */}
-          <AnimatePresence>
-            {suggestions.length > 0 && (
-              <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-[0_20px_40px_rgb(0,0,0,0.1)] border border-slate-100 overflow-hidden z-40 max-h-[300px] overflow-y-auto"
-              >
-                {suggestions.map((item) => (
-                  <Link 
-                    key={item.barcode} 
-                    to={`/product/${item.barcode}`}
-                    onClick={() => setSuggestions([])}
-                    className="flex items-center gap-4 p-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors"
-                  >
-                    <div className="w-10 h-10 bg-white border border-slate-100 rounded-xl overflow-hidden shrink-0 flex items-center justify-center p-1">
-                      {item.imageFrontUrl ? (
-                        <img src={item.imageFrontUrl} alt="" className="w-full h-full object-contain mix-blend-multiply" />
-                      ) : (
-                        <div className="text-xl">📦</div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-slate-800 text-sm truncate">{item.productName}</h4>
-                      <p className="text-xs font-medium text-slate-500 truncate">{item.brand}</p>
-                    </div>
-                    <ArrowRight size={16} className="text-slate-300 shrink-0" />
-                  </Link>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Main Action - Scan Button */}
-        <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
-          <Link to="/scan" className="block w-full rounded-[2rem] bg-emerald-500 p-8 shadow-[0_8px_30px_rgb(34,197,94,0.25)] text-white relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl transform translate-x-8 -translate-y-8"></div>
-            <div className="relative z-10 flex flex-col justify-end">
-              <div className="bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center backdrop-blur-md mb-6 shadow-sm border border-white/20">
-                <Scan size={28} className="text-white" />
-              </div>
-              <h2 className="text-3xl font-bold tracking-tight mb-1">Scan Barcode</h2>
-              <p className="text-emerald-50 font-medium text-sm flex items-center gap-1">
-                Get instant AI health analysis <ArrowRight size={16} />
-              </p>
+    <div id="view-home" className="screen-view active space-y-12 sm:space-y-16">
+      {/* Premium App Hero Block */}
+      <section className="relative overflow-hidden pt-8 pb-12 rounded-3xl sm:rounded-[36px] bg-gradient-to-br from-emerald-50/40 via-white dark:from-emerald-900/40 dark:via-slate-900/80 to-transparent border border-emerald-500/5 px-6 sm:px-12 shadow-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide select-none">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Ultra-Premium Metabolic Evaluation Core
             </div>
-          </Link>
-        </motion.div>
-      </header>
+            <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl text-slate-800 dark:text-slate-100 tracking-tight leading-none">
+              Your Personal <br className="hidden sm:inline" />
+              <span className="text-emerald-500">AI Nutritionist</span>
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
+              Instantly scan any retail snack or food barcode to unlock biochemical breakdown metrics, prebiotic indicators, allergen warnings, and clinical-grade AI feedback on physical wellness.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2">
+              <button 
+                onClick={() => navigate('/scan')}
+                className="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/35 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5 text-white animate-pulse" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                Scan Product Barcode
+              </button>
+              <button 
+                onClick={() => smoothScrollTo('trending-grid-section')}
+                className="w-full sm:w-auto px-8 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                Explore Trending Library
+              </button>
+            </div>
+          </div>
 
-      {/* Horizontal Category List */}
-      <section className="mb-8 overflow-hidden">
-        <div className="flex gap-3 px-6 overflow-x-auto hide-scrollbar pb-4 max-w-lg mx-auto snap-x">
-          {CATEGORIES.map(cat => (
-            <button 
-              key={cat.name}
-              onClick={() => setActiveCategory(cat.name)}
-              className={`shrink-0 px-5 py-2.5 rounded-full font-bold text-sm border shadow-sm transition-all snap-start ${
-                activeCategory === cat.name 
-                  ? 'bg-slate-900 text-white border-slate-900' 
-                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              {cat.emoji} {cat.name}
-            </button>
-          ))}
+          {/* Graphic Card Preview */}
+          <div className="lg:col-span-5 relative flex items-center justify-center select-none hidden lg:flex">
+            <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-emerald-500/10 to-transparent blur-3xl"></div>
+            <div className="relative w-full max-w-[340px] h-[340px] flex items-center justify-center">
+              
+              {/* Core Floating Product Base Card */}
+              <div className="absolute w-60 h-80 bg-white dark:bg-slate-900 rounded-3xl border border-emerald-500/10 shadow-2xl p-4 flex flex-col justify-between animate-[pulseSoft_2.5s_infinite_ease-in-out]">
+                <div className="relative w-full h-36 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+                  <img src="https://images.unsplash.com/photo-1536256263959-770b48d82b0a?auto=format&fit=crop&w=400&q=80" alt="Matcha" className="w-full h-full object-cover" />
+                  <span className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-emerald-500 text-white text-sm font-extrabold flex items-center justify-center shadow-md">A</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono font-bold text-emerald-600 uppercase">Beverages</span>
+                  <h3 className="font-display font-bold text-slate-800 dark:text-slate-100 leading-tight">Zen Matcha Latte</h3>
+                  <p className="text-[11px] text-slate-400">PureHarvest Organics</p>
+                </div>
+                <div className="flex items-center justify-between border-t border-slate-50 dark:border-slate-800 pt-2 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="flex items-center gap-1">🌿 Vegan</span>
+                  <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">115 kcal</span>
+                </div>
+              </div>
+
+              {/* Offset Glass Accent Badge */}
+              <div className="absolute -right-2 top-8 glass-card rounded-2xl p-3.5 shadow-xl flex items-center gap-3 border-emerald-500/10 z-10">
+                <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                  🧬
+                </div>
+                <div>
+                  <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Antioxidants</p>
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-100">98% High Purity</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       </section>
 
-      {/* Trending Products */}
-      <section className="px-6 max-w-lg mx-auto relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-slate-800 tracking-tight">Trending Now</h2>
+      {/* Grid: Trending Products */}
+      <section id="trending-grid-section" className="space-y-6 pb-20">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 className="font-display font-bold text-2xl text-slate-800 dark:text-slate-100 tracking-tight">Trending Verified Products</h2>
+            <p className="text-slate-400 dark:text-slate-500 text-xs sm:text-sm">Click any premium card below to execute instantaneous high-level biochemical breakdown views</p>
+          </div>
+          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full font-mono self-start sm:self-auto">
+            {trending.length > 0 ? `${trending.length} ACTIVE CORES` : 'LOADING...'}
+          </span>
         </div>
-        
-        {loadingTrending ? (
-          <div className="flex justify-center p-8">
-            <Loader2 className="animate-spin text-emerald-500" size={32} />
-          </div>
-        ) : trending.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4">
-            {trending.map(product => (
-              <Link 
-                to={`/product/${product.barcode}`} 
-                key={product._id}
-                className="glass-card p-4 flex flex-col group relative overflow-hidden bg-white hover:border-emerald-200 transition-colors"
-              >
-                <div className={`absolute top-3 right-3 z-10 border rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm backdrop-blur-md bg-white/80 ${getScoreColor(product.aiAnalysis?.healthScore)}`}>
-                  {product.aiAnalysis?.healthScore || '?'} / 10
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {loadingTrending ? (
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="glass-card h-64 animate-pulse bg-slate-100/50"></div>
+            ))
+          ) : trending.map((product) => (
+            <Link 
+              key={product._id} 
+              to={`/product/${product.barcode}`}
+              className="glass-card p-4 flex flex-col group relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/10"
+            >
+              <div className="relative w-full h-40 bg-white dark:bg-slate-900 rounded-2xl flex items-center justify-center p-4 mb-4">
+                <img src={product.imageFrontUrl} alt={product.productName} className="max-h-full max-w-full object-contain group-hover:scale-110 transition-transform duration-500" />
+                {product.aiAnalysis?.healthScore && (
+                  <span className="absolute top-2 right-2 w-7 h-7 rounded-full bg-emerald-500 text-white text-[10px] font-extrabold flex items-center justify-center shadow-md">
+                    {product.aiAnalysis.healthScore >= 8 ? 'A' : product.aiAnalysis.healthScore >= 5 ? 'C' : 'E'}
+                  </span>
+                )}
+              </div>
+              <div className="flex-1 flex flex-col justify-between">
+                <div>
+                  <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-1 block">{product.category || 'Food'}</span>
+                  <h3 className="font-display font-bold text-slate-800 dark:text-slate-100 leading-tight line-clamp-1">{product.productName}</h3>
+                  <p className="text-[11px] text-slate-400 mt-1 truncate">{product.brand || 'Unknown'}</p>
                 </div>
-                <div className="h-28 bg-white rounded-2xl flex items-center justify-center p-2 mb-3">
-                  <img src={product.imageFrontUrl} alt={product.productName} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3 mt-3 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                    {product.nutrition?.calories ? `${Math.round(product.nutrition.calories)} kcal` : 'N/A'}
+                  </span>
+                  <span className="text-emerald-500 dark:text-emerald-400 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    View <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                  </span>
                 </div>
-                <div className="mt-auto">
-                  <h4 className="font-bold text-slate-800 text-sm leading-tight line-clamp-2" title={product.productName}>{product.productName}</h4>
-                  <span className="text-[11px] font-medium text-slate-500 block mt-1 truncate">{product.brand}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-           <p className="text-center text-slate-500 py-8 font-medium">No trending products found.</p>
-        )}
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
     </div>
   );
