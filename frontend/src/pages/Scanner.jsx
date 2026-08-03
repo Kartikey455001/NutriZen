@@ -72,10 +72,12 @@ const Scanner = () => {
       {/* Simulator Camera Viewport Screen */}
       <div className="relative aspect-square w-full bg-slate-950 rounded-[32px] overflow-hidden border-4 border-white shadow-2xl flex flex-col items-center justify-center select-none group">
         
-        {/* Animated Mock Camera Background */}
-        <div className="absolute inset-0 opacity-45 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-emerald-950 to-slate-900 animate-[pulseSoft_2.5s_infinite_ease-in-out]"></div>
-        </div>
+        {/* Animated Mock Camera Background (Hide when camera is active) */}
+        {hasPermission !== true && (
+          <div className="absolute inset-0 opacity-45 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-emerald-950 to-slate-900 animate-[pulseSoft_2.5s_infinite_ease-in-out]"></div>
+          </div>
+        )}
 
         {hasPermission === false ? (
           <div className="text-center p-6 text-red-400 z-10">
@@ -91,6 +93,7 @@ const Scanner = () => {
             <Webcam
               ref={webcamRef}
               audio={false}
+              playsInline={true}
               screenshotFormat="image/jpeg"
               videoConstraints={{ facingMode: "environment" }}
               onUserMedia={() => setHasPermission(true)}
