@@ -70,17 +70,17 @@ const Scanner = () => {
       </div>
 
       {/* Simulator Camera Viewport Screen */}
-      <div className="relative aspect-square w-full bg-slate-950 rounded-[32px] overflow-hidden border-4 border-white shadow-2xl flex flex-col items-center justify-center select-none group">
+      <div className="relative w-full max-w-sm mx-auto bg-slate-950 rounded-[32px] overflow-hidden border-4 border-white dark:border-slate-800 shadow-2xl flex flex-col items-center justify-center select-none group min-h-[300px]">
         
         {/* Animated Mock Camera Background (Hide when camera is active) */}
         {hasPermission !== true && (
-          <div className="absolute inset-0 opacity-45 pointer-events-none">
+          <div className="absolute inset-0 opacity-45 pointer-events-none z-0">
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-emerald-950 to-slate-900 animate-[pulseSoft_2.5s_infinite_ease-in-out]"></div>
           </div>
         )}
 
         {hasPermission === false ? (
-          <div className="text-center p-6 text-red-400 z-10">
+          <div className="text-center p-6 text-red-400 z-10 relative">
             <svg className="w-12 h-12 mx-auto mb-4 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -89,7 +89,7 @@ const Scanner = () => {
             <p className="text-sm">Please enable camera permissions.</p>
           </div>
         ) : (
-          <>
+          <div className="relative w-full h-full flex items-center justify-center z-10">
             <Webcam
               ref={webcamRef}
               audio={false}
@@ -98,21 +98,23 @@ const Scanner = () => {
               videoConstraints={{ facingMode: "environment" }}
               onUserMedia={() => setHasPermission(true)}
               onUserMediaError={() => setHasPermission(false)}
-              className="absolute inset-0 w-full h-full object-cover z-10"
+              className="w-full h-full object-cover min-h-[300px]"
             />
-            {/* Scanning Guide Target Frame */}
-            <div className="relative w-72 h-44 border border-white/20 rounded-2xl flex flex-col justify-between p-4 bg-black/30 backdrop-blur-sm shadow-inner overflow-hidden z-20 pointer-events-none">
-              
-              {/* Moving Laser Scan Line */}
-              <div className="scanner-line absolute left-0 right-0 h-1 bg-emerald-400 w-full animate-[laser_2.2s_infinite_ease-in-out]"></div>
-              
-              {/* Corner brackets */}
-              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-emerald-400 rounded-tl-xl"></div>
-              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-emerald-400 rounded-tr-xl"></div>
-              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-emerald-400 rounded-bl-xl"></div>
-              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-emerald-400 rounded-br-xl"></div>
+            
+            {/* Scanning Guide Target Frame Overlay */}
+            <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
+              <div className="relative w-64 sm:w-72 h-40 sm:h-44 border border-white/20 rounded-2xl flex flex-col justify-between p-4 bg-black/10 backdrop-blur-[2px] shadow-inner overflow-hidden">
+                {/* Moving Laser Scan Line */}
+                <div className="scanner-line absolute left-0 right-0 h-1 bg-emerald-400 w-full animate-[laser_2.2s_infinite_ease-in-out]"></div>
+                
+                {/* Corner brackets */}
+                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-emerald-400 rounded-tl-xl"></div>
+                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-emerald-400 rounded-tr-xl"></div>
+                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-emerald-400 rounded-bl-xl"></div>
+                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-emerald-400 rounded-br-xl"></div>
+              </div>
             </div>
-          </>
+          </div>
         )}
       </div>
 
