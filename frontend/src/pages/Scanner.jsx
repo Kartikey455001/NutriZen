@@ -95,10 +95,10 @@ const Scanner = () => {
               videoConstraints={{ facingMode: "environment" }}
               onUserMedia={() => setHasPermission(true)}
               onUserMediaError={() => setHasPermission(false)}
-              className="absolute inset-0 w-full h-full object-cover z-0"
+              className="absolute inset-0 w-full h-full object-cover z-10"
             />
             {/* Scanning Guide Target Frame */}
-            <div className="relative w-72 h-44 border border-white/20 rounded-2xl flex flex-col justify-between p-4 bg-black/30 backdrop-blur-sm shadow-inner overflow-hidden z-10">
+            <div className="relative w-72 h-44 border border-white/20 rounded-2xl flex flex-col justify-between p-4 bg-black/30 backdrop-blur-sm shadow-inner overflow-hidden z-20 pointer-events-none">
               
               {/* Moving Laser Scan Line */}
               <div className="scanner-line absolute left-0 right-0 h-1 bg-emerald-400 w-full animate-[laser_2.2s_infinite_ease-in-out]"></div>
